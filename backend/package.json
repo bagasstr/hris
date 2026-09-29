@@ -1,0 +1,28 @@
+{
+    "name": "backend",
+    "type": "module",
+    "scripts": {
+        "dev": "bun run --hot src/index.ts",
+        "db:sign": "bunx prisma@latest db sign",
+        "push": "prisma contract emit && bunx prisma@latest db sign",
+        "db:sync": "prisma contract emit && prisma db update"
+    },
+    "dependencies": {
+        "@prisma/orm-postgres": "^8.0.0-rc.9",
+        "dotenv": "^17.4.2",
+        "hono": "^4.13.7"
+    },
+    "devDependencies": {
+        "@prisma/cli-engine": "0.2.3",
+        "@types/bun": "latest",
+        "@types/node": "^22.20.2",
+        "prisma": "^8.0.0-rc.10",
+        "tsx": "^4.23.13",
+        "typescript": "^7.0.2"
+    },
+    "prettier": {
+        "plugins": [
+            "prettier-plugin-prisma"
+        ]
+    }
+}

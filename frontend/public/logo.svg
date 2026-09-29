@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <defs>
+    <linearGradient id="fullBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <linearGradient id="fullBridgeGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A78BFA" />
+      <stop offset="100%" stop-color="#67E8F9" />
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+    <filter id="fullShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#4F46E5" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Logo Icon Container (64x64 at x=8, y=8) -->
+  <g filter="url(#fullShadow)">
+    <rect x="8" y="8" width="64" height="64" rx="16" fill="url(#fullBgGrad)" />
+    <rect x="9" y="9" width="62" height="62" rx="15" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.2" fill="none" />
+
+    <!-- People H Emblem scaled to 64x64 -->
+    <!-- Left Person -->
+    <circle cx="28.5" cy="22.7" r="4.2" fill="#FFFFFF" />
+    <rect x="24.6" y="29.8" width="7.8" height="27" rx="3.9" fill="#FFFFFF" />
+
+    <!-- Right Person -->
+    <circle cx="51.5" cy="22.7" r="4.2" fill="#FFFFFF" />
+    <rect x="47.6" y="29.8" width="7.8" height="27" rx="3.9" fill="#FFFFFF" />
+
+    <!-- Connection Bridge Wave -->
+    <path d="M 28.5 44.5 C 37.5 44.5, 40 36.8, 51.5 36.8 C 54 36.8, 54 41.3, 51.5 41.3 C 42.5 41.3, 40 49, 28.5 49 C 26 49, 26 44.5, 28.5 44.5 Z" fill="url(#fullBridgeGrad)" />
+  </g>
+
+  <!-- Typography -->
+  <text x="86" y="44" font-family="system-ui, -apple-system, 'Outfit', 'Nunito Sans', sans-serif" font-size="28" font-weight="800" letter-spacing="-0.5" fill="url(#accentGrad)">
+    HRIS
+  </text>
+  <text x="86" y="60" font-family="system-ui, -apple-system, 'Outfit', 'Nunito Sans', sans-serif" font-size="11" font-weight="600" letter-spacing="0.8" fill="#64748B">
+    HR MANAGEMENT SYSTEM
+  </text>
+</svg>

@@ -1,0 +1,188 @@
+// use prisma-next
+
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  password     String
+  name         String?
+  role         String  @default("employee")
+  nik          String? @unique
+  birthdate    String?
+  gender       String?
+  avatar       String?
+  phone        String?
+  address      String?
+  employeeCode String? @unique
+  joinDate     String?
+  status       String? @default("active")
+
+  departmentId String?
+  department   Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  positionId   String?
+  position     Position?          @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  sessions     Session[]
+  userRoles    UserRole[]
+  attendance   Attendance[]
+  leaveRequests      LeaveRequest[]
+  bankChangeRequests BankChangeRequest[]
+  banking            Banking?
+  createdAt    TimestamptzString  @default(now())
+  updatedAt    temporal.updatedAtString()
+  deletedAt    TimestamptzString?
+}
+
+model Banking {
+  id        String            @id @default(uuid())
+  bankName  String
+  accName   String
+  accNumber String
+  userId    String            @unique
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model Session {
+  id        String            @id @default(uuid())
+  token     String            @unique
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent String?
+  ipAddress String?
+  expiresAt TimestamptzString
+  createdAt TimestamptzString @default(now())
+}
+
+// RBAC Models
+model Role {
+  id              String            @id @default(uuid())
+  name            String            @unique // misal: "super_admin", "hr_manager", "employee"
+  displayName     String // misal: "HR Manager"
+  description     String?
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+  createdAt       TimestamptzString @default(now())
+  updatedAt       temporal.updatedAtString()
+}
+
+model Permission {
+  id              String            @id @default(uuid())
+  name            String            @unique // misal: "employees:read", "payroll:approve", "attendance:checkin"
+  displayName     String // misal: "View Employee List"
+  group           String // misal: "employee", "payroll", "attendance" (untuk grouping di UI)
+  rolePermissions RolePermission[]
+  createdAt       TimestamptzString @default(now())
+  updatedAt       temporal.updatedAtString()
+}
+
+// Pivot Table: User <-> Role (1 user bisa punya lebih dari 1 role jika dibutuhkan)
+model UserRole {
+  userId    String
+  roleId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt TimestamptzString @default(now())
+
+  @@id([userId, roleId])
+}
+
+// Pivot Table: Role <-> Permission (Role mana punya izin apa saja)
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role              @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission        @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    TimestamptzString @default(now())
+
+  @@id([roleId, permissionId])
+}
+
+model Department {
+  id          String            @id @default(uuid())
+  name        String            @unique
+  description String?
+  users       User[]
+  positions   Position[]
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+}
+
+model Position {
+  id           String            @id @default(uuid())
+  name         String
+  departmentId String?
+  department   Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  users        User[]
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+model Attendance {
+  id              String             @id @default(uuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date            String
+  clockIn         TimestamptzString?
+  clockOut        TimestamptzString?
+  status          String             @default("present")
+  lateMinutes     Int?               @default(0)
+  earlyMinutes    Int?               @default(0)
+  workHours       Float?             @default(0)
+  clockInLat      Float?
+  clockInLng      Float?
+  clockOutLat     Float?
+  clockOutLng     Float?
+  clockInAddress  String?
+  clockOutAddress String?
+  clockInPhoto    String?
+  clockOutPhoto   String?
+  ipAddress       String?
+  notes           String?
+  isApproved      Boolean?           @default(true)
+  approveById     String?
+  createdAt       TimestamptzString  @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  @@unique([userId, date])
+}
+
+model Shift {
+  id        String            @id @default(uuid())
+  name      String
+  startTime String
+  endTime   String
+  graceTime Int?
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model LeaveRequest {
+  id         String            @id @default(uuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String
+  startDate  String
+  endDate    String
+  reason     String
+  attachment String?
+  status     String            @default("pending")
+  approvedBy String?
+  createdAt  TimestamptzString @default(now())
+  updatedAt  temporal.updatedAtString()
+}
+
+model BankChangeRequest {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankName       String
+  accName        String
+  accNumber      String
+  reason         String?
+  attachment     String?
+  status         String            @default("pending")
+  rejectedReason String?
+  approvedById   String?
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
+}
