@@ -42,3 +42,19 @@ export interface CreateLeaveRequestDto {
 export interface UpdateLeaveStatusDto {
   status: "approved" | "rejected";
 }
+
+export interface LeaveBalance {
+  id: string;
+  userId: string;
+  year: number;
+  totalDays: number;
+  usedDays: number;
+  remainingDays: number;
+}
+
+export interface Holiday {
+  id: string;
+  name: string;
+  date: string;
+  description?: string | null;
+}

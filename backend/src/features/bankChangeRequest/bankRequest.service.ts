@@ -101,7 +101,6 @@ export const bankChangeRequestService = {
       throw new Error("Alasan penolakan wajib disertakan");
     }
 
-    // Jika disetujui (APPROVED), otomatis perbarui tabel Banking user
     if (dto.status === "approved") {
       const existingBanking = await prisma.Banking.where({
         userId: request.userId,

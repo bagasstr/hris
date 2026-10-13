@@ -26,6 +26,13 @@ model User {
   leaveRequests      LeaveRequest[]
   bankChangeRequests BankChangeRequest[]
   banking            Banking?
+  overtimeRequests   OvertimeRequest[]
+  leaveBalances      LeaveBalance[]
+  reimbursements     Reimbursement[]
+  salaryStructure    SalaryStructure?
+  payslips           Payslip[]
+  performanceReviews PerformanceReview[]
+  kpiItems           KpiItem[]
   createdAt    TimestamptzString  @default(now())
   updatedAt    temporal.updatedAtString()
   deletedAt    TimestamptzString?
@@ -103,6 +110,7 @@ model Department {
   description String?
   users       User[]
   positions   Position[]
+  jobPostings JobPosting[]
   createdAt   TimestamptzString @default(now())
   updatedAt   temporal.updatedAtString()
 }
@@ -113,6 +121,7 @@ model Position {
   departmentId String?
   department   Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   users        User[]
+  jobPostings  JobPosting[]
   createdAt    TimestamptzString @default(now())
   updatedAt    temporal.updatedAtString()
 }
@@ -186,3 +195,224 @@ model BankChangeRequest {
   createdAt      TimestamptzString @default(now())
   updatedAt      temporal.updatedAtString()
 }
+
+// Lembur / Overtime
+model OvertimeRequest {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          String            // YYYY-MM-DD
+  startTime     String            // HH:mm
+  endTime       String            // HH:mm
+  durationHours Float
+  reason        String
+  status        String            @default("pending") // pending, approved, rejected
+  notes         String?
+  approvedById  String?
+  createdAt     TimestamptzString @default(now())
+  updatedAt     temporal.updatedAtString()
+}
+
+// Kuota Cuti Karyawan
+model LeaveBalance {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year          Int
+  totalDays     Int               @default(12)
+  usedDays      Int               @default(0)
+  remainingDays Int               @default(12)
+  createdAt     TimestamptzString @default(now())
+  updatedAt     temporal.updatedAtString()
+
+  @@unique([userId, year])
+}
+
+// Hari Libur Nasional & Perusahaan
+model Holiday {
+  id          String            @id @default(uuid())
+  name        String
+  date        String            @unique // YYYY-MM-DD
+  description String?
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+}
+
+// Klaim Reimbursement
+model Reimbursement {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  category       String            // "medical", "transport", "meals", "office", "other"
+  amount         Float
+  date           String            // YYYY-MM-DD
+  description    String?
+  attachment     String?
+  status         String            @default("pending") // pending, approved, rejected, paid
+  rejectedReason String?
+  approvedById   String?
+  paidAt         TimestamptzString?
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
+}
+
+// Struktur / Master Komponen Gaji per Karyawan
+model SalaryStructure {
+  id                  String            @id @default(uuid())
+  userId              String            @unique
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  basicSalary         Float             @default(0)
+  allowance           Float             @default(0)
+  mealAllowance       Float             @default(0)
+  transportAllowance  Float             @default(0)
+  bpjsKesehatan       Boolean           @default(true)
+  bpjsKetenagakerjaan Boolean           @default(true)
+  createdAt           TimestamptzString @default(now())
+  updatedAt           temporal.updatedAtString()
+}
+
+// Periode Penggajian (Payroll Batch)
+model PayrollPeriod {
+  id          String            @id @default(uuid())
+  name        String            // misal "Oktober 2026"
+  startDate   String            // YYYY-MM-DD
+  endDate     String            // YYYY-MM-DD
+  payDate     String            // YYYY-MM-DD
+  status      String            @default("draft") // draft, processed, approved, paid
+  totalAmount Float             @default(0)
+  payslips    Payslip[]
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+}
+
+// Slip Gaji Karyawan
+model Payslip {
+  id             String            @id @default(uuid())
+  periodId       String
+  period         PayrollPeriod     @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  basicSalary    Float             @default(0)
+  totalAllowance Float             @default(0)
+  totalDeduction Float             @default(0)
+  overtimePay    Float             @default(0)
+  netSalary      Float             @default(0)
+  status         String            @default("draft") // draft, approved, paid
+  paidAt         TimestamptzString?
+  notes          String?
+  items          PayslipItem[]
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  @@unique([periodId, userId])
+}
+
+// Rincian Komponen Slip Gaji
+model PayslipItem {
+  id        String            @id @default(uuid())
+  payslipId String
+  payslip   Payslip           @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  name      String            // "Gaji Pokok", "Tunjangan Makan", "Potongan BPJS", dll.
+  type      String            // "earning" | "deduction"
+  amount    Float
+  createdAt TimestamptzString @default(now())
+}
+
+// Rekrutmen: Lowongan Kerja (Job Vacancy / Posting)
+model JobPosting {
+  id             String            @id @default(uuid())
+  title          String
+  departmentId   String?
+  department     Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  positionId     String?
+  position       Position?         @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  employmentType String            @default("full_time") // full_time, part_time, contract, internship
+  location       String?           // e.g. "Jakarta (Hybrid)", "Remote"
+  description    String
+  requirements   String?
+  salaryMin      Float?
+  salaryMax      Float?
+  status         String            @default("open") // draft, open, closed
+  deadline       String?           // YYYY-MM-DD
+  applicants     Applicant[]
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
+}
+
+// Rekrutmen: Data Pelamar (Applicant / Candidate)
+model Applicant {
+  id           String            @id @default(uuid())
+  jobPostingId String
+  jobPosting   JobPosting        @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  name         String
+  email        String
+  phone        String?
+  resumeUrl    String?
+  portfolioUrl String?
+  coverLetter  String?
+  status       String            @default("applied") // applied, screening, interview, offered, hired, rejected
+  notes        String?
+  appliedAt    TimestamptzString @default(now())
+  interviews   Interview[]
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+// Rekrutmen: Jadwal Wawancara (Interview)
+model Interview {
+  id             String            @id @default(uuid())
+  applicantId    String
+  applicant      Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  interviewerId  String?           // userId interviewer
+  scheduledAt    TimestamptzString
+  type           String            @default("online") // online, onsite
+  locationOrLink String?           // Link GMeet/Zoom atau Ruang Meeting
+  notes          String?
+  feedback       String?
+  status         String            @default("scheduled") // scheduled, completed, cancelled
+  result         String?           @default("pending") // pending, passed, failed
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
+}
+
+// Performa & Kinerja: Evaluasi Kinerja (Performance Review)
+model PerformanceReview {
+  id           String            @id @default(uuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewerId   String?           // HR / Manager evaluator
+  period       String            // e.g. "Q1 2026", "Tahunan 2026"
+  startDate    String?           // YYYY-MM-DD
+  endDate      String?           // YYYY-MM-DD
+  rating       Float?            // Skala 1 - 5
+  score        Float?            // Skor 0 - 100
+  feedback     String?
+  strengths    String?
+  improvements String?
+  status       String            @default("draft") // draft, in_review, completed
+  kpis         KpiItem[]
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+// Performa & Kinerja: Indikator Kinerja Utama (KPI Item / Goals)
+model KpiItem {
+  id           String             @id @default(uuid())
+  reviewId     String?
+  review       PerformanceReview? @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  targetValue  Float              @default(100)
+  currentValue Float              @default(0)
+  unit         String             @default("%") // "%", "point", "tiket", dll
+  weight       Float?             @default(10)
+  status       String             @default("in_progress") // not_started, in_progress, achieved, missed
+  dueDate      String?            // YYYY-MM-DD
+  createdAt    TimestamptzString  @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+

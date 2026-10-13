@@ -3,27 +3,24 @@ import { authMiddleware, requireRole } from "../../middlewares";
 import { leaveRequestController } from "./leave.controller";
 
 export const leaveRequestRoutes = new Hono();
-leaveRequestRoutes.post(
-  "/",
-  authMiddleware,
-  leaveRequestController.createLeave,
-);
-leaveRequestRoutes.get(
-  "/my",
-  authMiddleware,
-  leaveRequestController.getMyLeaves,
-);
-leaveRequestRoutes.get("/:id", authMiddleware, leaveRequestController.getById);
 
-leaveRequestRoutes.get(
-  "/",
-  authMiddleware,
-  requireRole("super_admin", "hr_manager"),
-  leaveRequestController.getAllLeave,
-);
+leaveRequestRoutes.use("*", authMiddleware);
+
+// Specific employee routes
+leaveRequestRoutes.get("/balance/my", leaveRequestController.getMyBalance);
+leaveRequestRoutes.get("/holidays", leaveRequestController.getHolidays);
+leaveRequestRoutes.post("/holidays", requireRole("super_admin", "hr_manager"), leaveRequestController.createHoliday);
+
+leaveRequestRoutes.post("/", leaveRequestController.createLeave);
+leaveRequestRoutes.get("/my", leaveRequestController.getMyLeaves);
+
+// Admin / HR routes
+leaveRequestRoutes.get("/", requireRole("super_admin", "hr_manager"), leaveRequestController.getAllLeave);
 leaveRequestRoutes.patch(
   "/:id/status",
-  authMiddleware,
   requireRole("super_admin", "hr_manager"),
   leaveRequestController.updateStatus,
 );
+
+// Detail route
+leaveRequestRoutes.get("/:id", leaveRequestController.getById);

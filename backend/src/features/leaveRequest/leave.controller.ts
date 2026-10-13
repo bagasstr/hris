@@ -96,4 +96,37 @@ export const leaveRequestController = {
       );
     }
   },
+
+  async getMyBalance(c: Context) {
+    try {
+      const user = c.get("user");
+      const year = c.req.query("year") ? parseInt(c.req.query("year")!) : undefined;
+      const balance = await leaveRequestService.getLeaveBalance(user.id, year);
+      return sendSuccess(c, { balance }, "Data kuota cuti berhasil diambil");
+    } catch (error: any) {
+      return sendError(c, error.message || "Gagal mengambil kuota cuti", 400);
+    }
+  },
+
+  async getHolidays(c: Context) {
+    try {
+      const holidays = await leaveRequestService.getHolidays();
+      return sendSuccess(c, { holidays }, "Data hari libur berhasil diambil");
+    } catch (error: any) {
+      return sendError(c, error.message || "Gagal mengambil data libur", 400);
+    }
+  },
+
+  async createHoliday(c: Context) {
+    try {
+      const body = await c.req.json();
+      if (!body.name || !body.date) {
+        return sendError(c, "Nama dan tanggal libur wajib diisi", 400);
+      }
+      const holiday = await leaveRequestService.createHoliday(body.name, body.date, body.description);
+      return sendSuccess(c, { holiday }, "Hari libur berhasil ditambahkan", 201);
+    } catch (error: any) {
+      return sendError(c, error.message || "Gagal menambahkan hari libur", 400);
+    }
+  },
 };

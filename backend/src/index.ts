@@ -11,11 +11,30 @@ import { config } from "./config";
 import { leaveRequestRoutes } from "./features/leaveRequest/leave.routes";
 import { shiftRoutes } from "./features/shift";
 import { bankChangeRequestRoutes } from "./features/bankChangeRequest";
+import { rolesRoutes } from "./features/roles";
+import { overtimeRoutes } from "./features/overtime";
+import { reimbursementRoutes } from "./features/reimbursement";
+import { payrollRoutes } from "./features/payroll";
+import { recruitmentRoutes } from "./features/recruitment";
+import { performanceRoutes } from "./features/performance";
 
 const app = new Hono();
 
 // Global Middlewares
-app.use("*", cors({ origin: config.corsOrigin }));
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (origin) return origin;
+      return config.corsOrigin && config.corsOrigin !== "*"
+        ? config.corsOrigin
+        : "http://localhost:3000";
+    },
+    credentials: true,
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
 app.use("*", loggerMiddleware);
 
 // Error Handler
@@ -41,6 +60,12 @@ api.route("/attendance", attendanceRoutes);
 api.route("/leaves", leaveRequestRoutes);
 api.route("/shift", shiftRoutes);
 api.route("/bank-requests", bankChangeRequestRoutes);
+api.route("/roles", rolesRoutes);
+api.route("/overtime", overtimeRoutes);
+api.route("/reimbursement", reimbursementRoutes);
+api.route("/payroll", payrollRoutes);
+api.route("/recruitment", recruitmentRoutes);
+api.route("/performance", performanceRoutes);
 
 app.route("/api/v1", api);
 
